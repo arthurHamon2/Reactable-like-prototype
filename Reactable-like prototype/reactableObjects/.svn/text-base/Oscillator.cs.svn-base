@@ -1,0 +1,281 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows.Shapes;
+using System.Windows.Media;
+using System.Windows.Controls;
+using System.Windows;
+using System.Windows.Input;
+using System.Media;
+using Microsoft.DirectX.AudioVideoPlayback;
+using Microsoft.DirectX.DirectSound;
+
+namespace WpfApplication2.reactableObjects
+{
+    
+
+    class Oscillator : Generator
+    {
+        private Audio player;
+
+        /// <summary>
+        /// Constructs an oscillator object.
+        /// </summary>
+        /// <param name="_canvas">canvas where the oscillator is on it</param>
+        /// <param name="x">Coordonne x</param>
+        /// <param name="y">Coordonne y</param>
+        /// <param name="_width">The size of each object's side</param>
+        public Oscillator(Canvas _canvas, int _x, int _y, double _width) : base(_canvas, _x, _y, _width)
+        {
+
+			// Add the object on the canvas.
+			drawRightArc();
+			drawLeftArc();
+			drawPointerArcLeft();
+			drawPointerArcRight();
+			drawingCollisionSurface(300);
+			drawSubtypeMenubButton();
+
+			// Set the opacity of the collision surface, it will be appear when the user click on the object
+			collisionSurface.Opacity = 0;
+
+			// Initialization position left pointer
+			pointerArcLeftMax = 44100;
+			pointerArcLeftMin = 0;
+			pointerPositionArcLeft = 0;
+
+			geometricShape.Fill = Brushes.Green;
+			geometricShape.Stroke = Brushes.Black;
+
+            geometricShape.MouseDown += new MouseButtonEventHandler(geometricShape_MouseDown);
+        }
+
+		/// <summary>
+		/// This function allows to draw the left arc of the object.
+		/// </summary>
+		protected new void drawLeftArc()
+		{
+
+			// The radius of the circumcercle.
+			double radius = Math.Sqrt(height * height + width * width) / 2;
+
+			PathSegmentCollection pathSegmentCollection = new PathSegmentCollection();
+			PathFigureCollection segmentPathFigureCollection = new PathFigureCollection();
+			
+			PathFigure segmentPathFigure = new PathFigure();
+			Point StartPoint;
+			Point lineStopPoint1;
+			Point lineStopPoint2;
+			Point lineStopPoint3;
+			ArcSegment lineSegment1;
+			LineSegment lineSegment2;
+			ArcSegment lineSegment3;
+
+			// Draws First rectangle.
+			if (pointerPositionArcLeft >= 10000)
+			{
+				segmentPathFigure = new PathFigure();
+			
+				StartPoint = PointOnCircle(radius + 13, arcLeft_angleLow, new Point(x, y));
+				lineStopPoint1 = PointOnCircle(radius + 13, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4), new Point(x, y));
+				lineStopPoint2 = PointOnCircle(radius + 10, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4), new Point(x, y));
+				lineStopPoint3 = PointOnCircle(radius + 10, arcLeft_angleLow, new Point(x, y));
+				segmentPathFigure.StartPoint = StartPoint;
+				segmentPathFigure.IsClosed = true;
+
+				lineSegment1 = new ArcSegment(lineStopPoint1, new Size(radius + 13, radius + 13), 0, false, SweepDirection.Clockwise, true);
+				lineSegment2 = new LineSegment(lineStopPoint2, true);
+				lineSegment3 = new ArcSegment(lineStopPoint3, new Size(radius + 13, radius + 13), 0, false, SweepDirection.Counterclockwise, true);
+
+				pathSegmentCollection.Add(lineSegment1);
+				pathSegmentCollection.Add(lineSegment2);
+				pathSegmentCollection.Add(lineSegment3);
+				segmentPathFigure.Segments = pathSegmentCollection;
+				segmentPathFigureCollection.Add(segmentPathFigure);
+			}
+
+			//Draws Second rectangle.
+			if (pointerPositionArcLeft >= 20000)
+			{
+				pathSegmentCollection = new PathSegmentCollection();
+				PathFigure segmentPathFigure2 = new PathFigure();
+
+				StartPoint = PointOnCircle(radius + 13, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4), new Point(x, y));
+				lineStopPoint1 = PointOnCircle(radius + 13, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4) * 2, new Point(x, y));
+				lineStopPoint2 = PointOnCircle(radius + 10, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4) * 2, new Point(x, y));
+				lineStopPoint3 = PointOnCircle(radius + 10, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4), new Point(x, y));
+				segmentPathFigure2.StartPoint = StartPoint;
+				segmentPathFigure2.IsClosed = true;
+
+				lineSegment1 = new ArcSegment(lineStopPoint1, new Size(radius + 13, radius + 13), 0, false, SweepDirection.Clockwise, true);
+				lineSegment2 = new LineSegment(lineStopPoint2, true);
+				lineSegment3 = new ArcSegment(lineStopPoint3, new Size(radius + 13, radius + 13), 0, false, SweepDirection.Counterclockwise, true);
+
+				pathSegmentCollection.Add(lineSegment1);
+				pathSegmentCollection.Add(lineSegment2);
+				pathSegmentCollection.Add(lineSegment3);
+				segmentPathFigure2.Segments = pathSegmentCollection;
+				segmentPathFigureCollection.Add(segmentPathFigure2);
+			}
+
+			//Draws Third rectangle.
+			if (pointerPositionArcLeft >= 30000)
+			{
+				pathSegmentCollection = new PathSegmentCollection();
+				PathFigure segmentPathFigure3 = new PathFigure();
+
+				StartPoint = PointOnCircle(radius + 13, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4) * 2, new Point(x, y));
+				lineStopPoint1 = PointOnCircle(radius + 13, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4) * 3, new Point(x, y));
+				lineStopPoint2 = PointOnCircle(radius + 10, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4) * 3, new Point(x, y));
+				lineStopPoint3 = PointOnCircle(radius + 10, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4) * 2, new Point(x, y));
+				segmentPathFigure3.StartPoint = StartPoint;
+				segmentPathFigure3.IsClosed = true;
+
+				lineSegment1 = new ArcSegment(lineStopPoint1, new Size(radius + 13, radius + 13), 0, false, SweepDirection.Clockwise, true);
+				lineSegment2 = new LineSegment(lineStopPoint2, true);
+				lineSegment3 = new ArcSegment(lineStopPoint3, new Size(radius + 13, radius + 13), 0, false, SweepDirection.Counterclockwise, true);
+
+				pathSegmentCollection.Add(lineSegment1);
+				pathSegmentCollection.Add(lineSegment2);
+				pathSegmentCollection.Add(lineSegment3);
+				segmentPathFigure3.Segments = pathSegmentCollection;
+				segmentPathFigureCollection.Add(segmentPathFigure3);
+			}
+
+			//Draws Fourth rectangle.
+			if (pointerPositionArcLeft >= 40000)
+			{
+				pathSegmentCollection = new PathSegmentCollection();
+				PathFigure segmentPathFigure4 = new PathFigure();
+
+				StartPoint = PointOnCircle(radius + 13, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4) * 3, new Point(x, y));
+				lineStopPoint1 = PointOnCircle(radius + 13, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4) * 4, new Point(x, y));
+				lineStopPoint2 = PointOnCircle(radius + 10, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4) * 4, new Point(x, y));
+				lineStopPoint3 = PointOnCircle(radius + 10, arcLeft_angleLow + ((arcLeft_angleHigh - arcLeft_angleLow) / 4) * 3, new Point(x, y));
+				segmentPathFigure4.StartPoint = StartPoint;
+				segmentPathFigure4.IsClosed = true;
+
+				lineSegment1 = new ArcSegment(lineStopPoint1, new Size(radius + 13, radius + 13), 0, false, SweepDirection.Clockwise, true);
+				lineSegment2 = new LineSegment(lineStopPoint2, true);
+				lineSegment3 = new ArcSegment(lineStopPoint3, new Size(radius + 13, radius + 13), 0, false, SweepDirection.Counterclockwise, true);
+
+				pathSegmentCollection.Add(lineSegment1);
+				pathSegmentCollection.Add(lineSegment2);
+				pathSegmentCollection.Add(lineSegment3);
+				segmentPathFigure4.Segments = pathSegmentCollection;
+				segmentPathFigureCollection.Add(segmentPathFigure4);
+			}
+
+			// Draws Arc
+			pathSegmentCollection = new PathSegmentCollection();
+			PathFigure segmentPathFigure5 = new PathFigure();
+
+			Point arcStartPoint = PointOnCircle(radius, arcLeft_angleLow, new Point(x, y));
+			Point arcStopPoint = PointOnCircle(radius, arcLeft_angleHigh, new Point(x, y));
+			segmentPathFigure5.StartPoint = arcStartPoint;
+			segmentPathFigure5.IsFilled = false;
+
+			ArcSegment arcSegment = new ArcSegment(arcStopPoint, new Size(radius, radius), 0, false, SweepDirection.Clockwise, true);
+
+			pathSegmentCollection.Add(arcSegment);
+			segmentPathFigure5.Segments = pathSegmentCollection;
+			segmentPathFigureCollection.Add(segmentPathFigure5);
+
+
+			PathGeometry segmentPathGeometry = new PathGeometry();
+			segmentPathGeometry.Figures = segmentPathFigureCollection;
+
+			// Set up the segment's drawing (and hit-testing) path.
+			arcLeft = new Path();
+			arcLeft.Stroke = Brushes.Black;
+			arcLeft.StrokeThickness = 1;
+			arcLeft.Fill = Brushes.White;
+			arcLeft.Data = segmentPathGeometry;
+			Canvas.SetLeft(arcLeft, 0);
+			Canvas.SetTop(arcLeft, 0);
+
+			// set Z index for the geometric shape for hidding connection line 
+			Canvas.SetZIndex(arcLeft, 1);
+
+			Canvas.Children.Add(arcLeft);
+		}
+
+
+		/// <summary>
+		/// This function allows to rotate the central shape.
+		/// </summary>
+		/// <param name="angle">The angle of rotate of the central shape.</param>
+		public new void rotateGeometricShape(double angle)
+		{
+			//Rotate the central shape.
+			geometricShapeRotateTransform.Angle += angle;
+			geometricShapeRotateTransform.CenterX = height / 2;
+			geometricShapeRotateTransform.CenterY = width / 2;
+			geometricShape.RenderTransform = geometricShapeTransformGroup;
+
+			double anglePointerPerAngleShape = (arcLeft_angleHigh - arcLeft_angleLow) / 10000;
+			double unitPositionPerAngleShape = 10000 / (arcLeft_angleHigh - arcLeft_angleLow);
+
+			// If the pointer is beyond of the left arc then the software does nothing
+			if (pointerPositionArcLeft + angle * unitPositionPerAngleShape * anglePointerPerAngleShape <= pointerArcLeftMax && pointerPositionArcLeft + angle * unitPositionPerAngleShape * anglePointerPerAngleShape >= pointerArcLeftMin)
+			{
+				double previousPointerPositionArcLeft = pointerPositionArcLeft;
+				pointerPositionArcLeft = pointerPositionArcLeft + angle * unitPositionPerAngleShape * anglePointerPerAngleShape;
+
+				if (((int)previousPointerPositionArcLeft / 10000) != ((int)pointerPositionArcLeft / 10000))
+				{
+					Canvas.Children.Remove(arcLeft);
+					drawLeftArc();
+
+					pointerArcLeftRotateTransform.Angle = 0;
+					pointerArcLeftRotateTransform.CenterX = x - Canvas.GetLeft(pointerArcLeft);
+					pointerArcLeftRotateTransform.CenterY = y - Canvas.GetTop(pointerArcLeft);
+					pointerArcLeft.RenderTransform = pointerArcLeftTransformGroup;
+				}
+
+				pointerArcLeftRotateTransform.Angle += angle * anglePointerPerAngleShape;
+				pointerArcLeftRotateTransform.CenterX = x - Canvas.GetLeft(pointerArcLeft);
+				pointerArcLeftRotateTransform.CenterY = y - Canvas.GetTop(pointerArcLeft);
+				pointerArcLeft.RenderTransform = pointerArcLeftTransformGroup;
+
+			}
+            // Playing sound with the correct frequency
+            playSound();
+		}
+
+        /// <summary>
+        /// Gets the current frequency of an oscillator
+        /// </summary>
+        /// <returns> The current frequency</returns>
+        public int getFrequency()
+        {
+            return (int)pointerPositionArcLeft;
+        }
+
+        public void playSound()
+        {
+            // Set filepath
+            string filePath = this.GetHashCode().ToString();
+
+            // Instantiate wave generator
+            WaveGenerator wave = new WaveGenerator(WaveExampleType.ExampleSquareWave,getFrequency(),0.1);
+              
+
+            // Save to filepath
+            wave.Save(filePath);
+
+            // Play the sound
+			player = new Audio(filePath);
+            player.Play();
+        }
+
+        
+        protected virtual void geometricShape_MouseDown(object sender, MouseEventArgs e)
+        {
+            rotateGeometricShape(1000);
+            Console.WriteLine("frequency: {0} ", getFrequency());
+        }
+        
+    }
+}

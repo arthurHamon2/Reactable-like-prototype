@@ -1,0 +1,402 @@
+﻿using System;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using System.Diagnostics;
+using System.Windows.Controls;
+using System.Windows;
+using System.Windows.Shapes;
+using System.Windows.Media;
+
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
+
+using System.Timers;
+using System.Windows.Threading;
+using System.Threading;
+
+namespace WpfApplication2
+{
+    /// <summary>
+    ///
+    /// </summary>
+    class RectangleFocusMenu : FocusMenu
+    {
+        #region Context.
+        /// <summary>
+        /// The top point of the active menu surface
+        /// </summary>
+		private double activeMenuSurfaceTop = 0; 
+		
+        /// <summary>
+        /// The bottom point of the active menu surface
+		/// </summary>
+        private double activeMenuSurfaceBottom = 0;
+		
+        /// <summary>
+        /// The left point of the active menu surface
+		/// </summary>
+        private double activeMenuSurfaceLeft = 0;
+        
+        /// <summary>
+        /// The right point of the active menu surface
+        /// </summary>
+        private double activeMenuSurfaceRight = 0;
+
+        /// <summary>
+        /// The segment select at the creation (blank)
+        /// </summary>
+		private int initialSelectSegment;
+
+        /// <summary>
+        /// The actual segment 
+        /// </summary>
+		private int actualCentralSegment;
+	
+        /// <summary>
+        /// Check if the menu is vertical, else it will be horizontal
+        /// </summary>
+        private Boolean verticallyPosition; 
+
+        /// <summary>
+        /// Width of the menu's segment
+        /// </summary>
+		private double segmentWidth = 100;
+
+        /// <summary>
+        /// Height of the menu's segment
+        /// </summary>
+		private double segmentHeight = 100;
+
+         /// <summary>
+        /// This boolean use to know the state of the menu
+        /// </summary>
+        public Boolean menuIsOpen;
+
+        /// <summary>
+        /// Value to translate the menu for opening or closing it
+        /// </summary>
+        private const int translateMenu = 80;
+
+        /// <summary>
+        /// Height of the menu's surface
+        ///</summary>
+        protected const double SurfaceHeight = 40;
+
+        /// <summary>
+        /// Space between two segment
+        /// </summary>
+		protected const double colspan = 3; // Default value.
+
+        #endregion Context.
+
+        /// <summary>
+        /// Create a new type of focus menu, a rectangle one. 
+        /// It could be horizontal or vertical.
+        /// First, the menu is closed.
+        /// </summary>
+        /// <param name="_focusCanvas">The canvas that the focus item (if any) has been drawn on and that the menu is to be drawn on.</param>
+        /// <param name="_focusPoint">The (x, y) coordinates upon which the menu is to center its focus. This is the focus point associated 
+        /// with the focus item right-clicked upon (if any) or it is the coordinates of a right-click on the focus canvas.</param>
+        /// <param name="_focusPath">The path of the item right-clicked upon.</param>
+        /// <param name="_position"> The position of the menu (horizontaly or vertically) </param>
+		public RectangleFocusMenu(Canvas _focusCanvas, System.Windows.Point _focusPoint, Path _focusPath, Boolean _position)
+			: base(_focusCanvas, _focusPoint, _focusPath)
+		{
+            // set the boolean to the expected position
+             verticallyPosition = _position;
+            // the menu is closed at the beginning 
+            menuIsOpen = false;
+		}
+
+        /// <summary>
+        /// Set up all the stuff about segments and path for the menu
+        /// </summary>
+		public override void SetUpMenu()
+		{
+			initialSelectSegment = (segmentImagesInfo.Count - 1) / 2; //we take the central one by default
+			actualCentralSegment = initialSelectSegment;
+			numberOfMenuItemsShow = segmentImagesInfo.Count; //we show all the items
+			segmentOpacicity = 0.2;
+
+			#region Create the menu's active surface drawing path .
+
+                /*activeMenuSurface = new Path();
+               
+                System.Windows.Point pointActiveMenuSurfaceTopLeft;
+                System.Windows.Point pointActiveMenuSurfaceBottomRight;
+
+                if (verticallyPosition == true)
+                {
+                    //few math to calculate the menu position vertically
+                    activeMenuSurfaceTop = focusPoint.Y - segmentHeight / 2 - segmentHeight * initialSelectSegment - colspan;
+                    activeMenuSurfaceLeft = focusPoint.X - segmentWidth / 2;
+                    activeMenuSurfaceBottom = focusPoint.Y + segmentHeight / 2 + segmentHeight * ((segmentImagesInfo.Count) - initialSelectSegment - 1) + colspan;
+                    activeMenuSurfaceRight = focusPoint.X + segmentWidth / 2;
+                    pointActiveMenuSurfaceTopLeft = new System.Windows.Point(activeMenuSurfaceLeft,activeMenuSurfaceTop);
+                    pointActiveMenuSurfaceBottomRight = new System.Windows.Point(activeMenuSurfaceRight, activeMenuSurfaceBottom);
+                }
+                else
+                {
+                   //few math to calculate the menu position horizontally
+                    activeMenuSurfaceTop = focusPoint.X - segmentWidth / 2 - segmentWidth * initialSelectSegment - colspan;
+                   activeMenuSurfaceLeft = focusPoint.Y - segmentHeight / 2;
+                   activeMenuSurfaceBottom = focusPoint.X + segmentWidth / 2 + segmentWidth * ((segmentImagesInfo.Count) - initialSelectSegment - 1) + colspan;
+                   activeMenuSurfaceRight = focusPoint.Y + segmentHeight / 2;
+
+                   pointActiveMenuSurfaceTopLeft = new System.Windows.Point(activeMenuSurfaceTop,activeMenuSurfaceLeft);
+                   pointActiveMenuSurfaceBottomRight = new System.Windows.Point(activeMenuSurfaceBottom, activeMenuSurfaceRight);
+                }  
+
+                activeMenuSurface.Data = new RectangleGeometry(new Rect(pointActiveMenuSurfaceTopLeft,
+                                                                                        pointActiveMenuSurfaceBottomRight), 2, 2);
+                activeMenuSurface.Stroke = System.Windows.Media.Brushes.Black;
+                activeMenuSurface.StrokeThickness = 2;
+                activeMenuSurface.Fill = System.Windows.Media.Brushes.LightBlue; // So we will notice any gaps between segments (for example).
+                activeMenuSurface.Opacity = 0.5;
+                activeMenuSurface.RenderTransform = new TranslateTransform(); //so we will be able to translate it easily.
+           */
+            #endregion Create the menu's active surface drawing path.
+  
+            #region Create the menu's segments.
+
+            // Must have at least one segments otherwise (a) we would need a segment of more
+			if (segmentImagesInfo.Count < 1)
+				throw new ArgumentOutOfRangeException("FocusMenu must have a minimum of one menu items.");
+             double x;
+             double y;
+             double segmentFigureWidth;
+             double segmentFigureHeight;
+
+            if (verticallyPosition == true)
+            {
+                //we calculate right x point of the segment
+                x = focusPoint.X - segmentWidth / 2 + colspan + activeMenuSurface.StrokeThickness;
+                //we calculate the first Y
+                y = activeMenuSurfaceTop + colspan + activeMenuSurface.StrokeThickness;
+                //we calculate the size of the segment
+                segmentFigureWidth = segmentWidth - 2 * colspan - 2 * activeMenuSurface.StrokeThickness;
+                segmentFigureHeight = segmentHeight - colspan;
+            }
+            else
+            {
+                x = activeMenuSurfaceTop + colspan + activeMenuSurface.StrokeThickness;
+                y = focusPoint.Y - segmentHeight / 2 + colspan + activeMenuSurface.StrokeThickness;
+                segmentFigureHeight = segmentHeight - 2 * colspan - 2 * activeMenuSurface.StrokeThickness;
+                segmentFigureWidth = segmentWidth - colspan;
+            }
+
+			// Set up segment drawing for each menu item.
+			for (int segmentNumber = 0; segmentNumber < segmentImagesInfo.Count; segmentNumber++)
+			{
+
+				// Set up the collection that holds the line and arc that define a segment.
+				PathFigureCollection pathFigureCollection = new PathFigureCollection();
+
+				// Need a separate path figure for each segment.
+				PathFigure segmentPathFigure = new PathFigure();
+
+				System.Windows.Point SegmentTopLeft;
+				System.Windows.Point SegmentBottomRight;
+
+                SegmentTopLeft = new System.Windows.Point(x,y);
+                SegmentBottomRight = new System.Windows.Point(x + segmentFigureWidth,
+                                                             y + segmentFigureHeight);
+				// Set up the segment's drawing (and hit-testing) path and its Tag.
+				Path segmentPath = new Path();
+                segmentPath.Stroke = System.Windows.Media.Brushes.Black;
+                segmentPath.StrokeThickness = 2;
+                segmentPath.Fill = System.Windows.Media.Brushes.Blue;
+                segmentPath.Opacity = segmentOpacicity;
+				segmentPath.Data = new RectangleGeometry(new Rect(SegmentTopLeft, SegmentBottomRight), 2, 2);
+			
+                // The selection's value to be passed back to the focus item via an event.
+				segmentPath.Tag = segmentNumber;
+
+				segmentPath.RenderTransform = new TranslateTransform();
+
+				// Add this segment's path into the collection.
+				segmentPaths.Add(segmentPath);
+				System.Windows.Point segmentImagePoint;
+
+				segmentImagePoint = new System.Windows.Point((SegmentTopLeft.X + SegmentBottomRight.X) / 2 + 3,
+														     (SegmentTopLeft.Y + SegmentBottomRight.Y) / 2 + SurfaceHeight + 3); // +3 in order to center the note in the case.
+
+				// Resize the image.
+				System.Windows.Controls.Image myImage = new System.Windows.Controls.Image();
+				if (initialSelectSegment == segmentNumber) //if we add the blank segment
+				{
+					SegmentImageInfo ImageInfo = new SegmentImageInfo(new System.Windows.Controls.Image(),//we add a new image so we can move it as any other segment
+																  segmentImagesInfo[segmentNumber].translateX,
+																  segmentImagesInfo[segmentNumber].translateY);
+
+					segmentImagesInfo.Insert(segmentNumber, ImageInfo);
+				}
+				myImage = segmentImagesInfo[segmentNumber].image;
+
+				myImage.Height = 30;
+				myImage.MaxWidth = segmentWidth;
+
+				// Add the image to the Canvas.
+				Canvas.SetLeft(myImage, segmentImagePoint.X + segmentImagesInfo[segmentNumber].translateX);
+				Canvas.SetTop(myImage, segmentImagePoint.Y + segmentImagesInfo[segmentNumber].translateY);
+
+                if (verticallyPosition == true) y = SegmentBottomRight.Y + colspan;//we update the Y for the next segment (vertical version)
+                else x = SegmentBottomRight.X + colspan; // horizontally Version
+			}
+
+			#endregion Create the menu's segments.
+
+		}
+
+
+
+        /// <summary>
+        /// function to open the menu
+        /// </summary>
+        public void openMenu()
+        {
+            translateMenuHorizontally(translateMenu); //re-initialize menu's position
+            menuIsOpen = true;
+        }
+
+        /// <summary>
+        ///  function to close the menu
+        /// </summary>
+        public void closeMenu()
+        {
+            translateMenuHorizontally(-translateMenu); //re-initialize menu's position
+            menuIsOpen = false;
+        }
+
+        /// <summary>
+        /// Function called when the user try to scroll the menu
+        /// </summary>
+        /// <param name="fingerPosition"> Finger's position on the Smart Board </param>
+        public void FingerEnterScrolingMenu(Point fingerPosition)
+        {
+            if (verticallyPosition == true) //check the menu's proprieties
+                FingerEnterScrolingVerticallyMenu(fingerPosition); //we called the function to scroll the menu vertically
+            else
+                FingerEnterScrolingHorrizontallyMenu(fingerPosition); // or horizontally
+        }
+
+        /// <summary>
+        /// This function check if the vertically menu need to be scroll (down or up) or not.
+        /// If the menu need to be scroll, the function call an another function to do it
+        /// </summary>
+        /// <param name="fingerPosition"> Finger's position on the Smart Board </param>
+        public void FingerEnterScrolingVerticallyMenu(Point fingerPosition)
+        {
+            int sensibility = 2; //make the menu easier to manipulate with a finger. Much sensibility is high, much it is better
+            int scrollSensibility = 15; //scroll sensibility is updated for Smart Board user, much sensibility is high, much it is better
+            //if we are above the current segment
+            if (fingerPosition.Y < focusPoint.Y - segmentHeight / sensibility //if we are above the segment
+                && activeMenuSurfaceTop < focusPoint.Y - segmentHeight / sensibility //if we are not at the end of the scroling menu
+                && fingerPosition.X > focusPoint.X - segmentWidth
+                && fingerPosition.X < focusPoint.X + segmentWidth) //we do not scroll if we are out of the menu
+            {
+                Debug.WriteLine(String.Format("scroling down : Y=" + Mouse.GetPosition(focusCanvas).Y + " focusY=" + focusPoint.Y + " segmentHeight=" + segmentHeight / 2));
+                translateMenuVertically(segmentWidth / scrollSensibility);
+                actualCentralSegment--;
+            }
+
+            //if we are under the current segment
+            else if (fingerPosition.Y > focusPoint.Y + segmentHeight / sensibility //if we are under the segment
+                && activeMenuSurfaceBottom > focusPoint.Y + segmentHeight / sensibility     //if we arn't at the end of the scroling menu
+                && fingerPosition.X > focusPoint.X - segmentWidth 
+                && fingerPosition.X < focusPoint.X + segmentWidth )//we do not scroll if we are out of the menu
+            {
+
+                Debug.WriteLine(String.Format("scroling up : Y=" + Mouse.GetPosition(focusCanvas).Y + " top segment=" + focusPoint.Y + segmentHeight / 2));
+                translateMenuVertically(-segmentWidth / scrollSensibility);
+                actualCentralSegment++;
+            }
+        }
+
+        /// <summary>
+        /// This function check if the horrizontally menu need to be scroll (down or up) or not.
+        /// If the menu need to be scroll, the function call an another function to do it
+        /// </summary>
+        /// <param name="fingerPosition"> Finger's position on the Smart Board </param>
+        protected void FingerEnterScrolingHorrizontallyMenu(Point fingerPosition)
+        {
+            int sensibility = 2; //make the menu easier to manipulate with a finger. Much sensibility is high, much it is better
+            int scrollSensibility = 15; //scroll sensibility is updated for Smart Board user, much sensibility is high, much it is better
+            //if we are above the current segment
+            if (fingerPosition.X < focusPoint.X - segmentWidth / sensibility  //if we are above the segment
+                && activeMenuSurfaceTop < focusPoint.X - segmentWidth / sensibility //if we are not at the end of the scroling menu
+                && fingerPosition.Y > focusPoint.Y - segmentWidth 
+                && fingerPosition.Y < focusPoint.Y - segmentWidth )
+            {
+                Debug.WriteLine(String.Format("scroling down : Y=" + Mouse.GetPosition(focusCanvas).Y + " focusY=" + focusPoint.Y + " segmentHeight=" + segmentHeight / 2));
+                translateMenuHorizontally(segmentWidth / scrollSensibility);
+                actualCentralSegment--;
+            }
+
+            //if we are under the current segment
+            else if (fingerPosition.X > focusPoint.X + segmentWidth / sensibility  //if we are under the segment
+                && activeMenuSurfaceBottom > focusPoint.X + segmentWidth / sensibility //if we are not at the end of the scroling menu
+                && fingerPosition.Y > focusPoint.Y - segmentWidth 
+                && fingerPosition.Y < focusPoint.Y - segmentWidth)
+            {
+
+                Debug.WriteLine(String.Format("scroling up : Y=" + Mouse.GetPosition(focusCanvas).Y + " top segment=" + focusPoint.Y + segmentHeight / 2));
+                translateMenuHorizontally(-segmentWidth / scrollSensibility);
+                actualCentralSegment++;
+            }
+        }
+
+        /// <summary>
+        /// Translate the vertically menu effectively
+        /// </summary>
+        /// <param name="_y"> Value to know how to translate the menu (how much?) on the Y axe </param>
+		protected void translateMenuVertically(double _y)
+		{
+			activeMenuSurfaceTop += _y;
+			activeMenuSurfaceBottom += _y;
+
+			//We translate the activ menu surface
+			((TranslateTransform)activeMenuSurface.RenderTransform).Y += _y;
+
+            double positionY = activeMenuSurfaceTop + 2 * colspan;
+			for (int segmentNumber = 0; segmentNumber < segmentPaths.Count; segmentNumber++)
+			{
+				// we update the Y.
+				Canvas.SetTop(segmentImagesInfo[segmentNumber].image, positionY);
+				positionY += segmentHeight;
+				((TranslateTransform)segmentPaths[segmentNumber].RenderTransform).Y += _y;
+			}
+		}
+
+        /// <summary>
+        /// Translate the horrizontally menu effectively
+        /// </summary>
+        /// <param name="_x"> Value to know how to translate the menu (how much?) on the X axe</param>
+        public void translateMenuHorizontally(double _x)
+        {
+			activeMenuSurfaceTop += _x; //
+			activeMenuSurfaceBottom += _x; //
+
+			//We translate the activ menu surface
+			((TranslateTransform)activeMenuSurface.RenderTransform).X += _x;
+
+            double positionX = activeMenuSurfaceTop + segmentWidth / 2 +activeMenuSurface.StrokeThickness - 2 * colspan;
+			for (int segmentNumber = 0; segmentNumber < segmentPaths.Count; segmentNumber++)
+			{
+				//then we update the X.
+				Canvas.SetLeft(segmentImagesInfo[segmentNumber].image, positionX);
+                positionX += segmentWidth;
+                    
+				((TranslateTransform)segmentPaths[segmentNumber].RenderTransform).X += _x;
+			}
+        }
+
+
+	}
+
+}
+    
+
