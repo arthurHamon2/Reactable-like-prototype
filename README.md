@@ -7,7 +7,7 @@ About the project
 
 I did this project with my teammate, Thomas Betous, during my internship at Teesside University in 2011.  
 The main purpose was to create a project similar to the reactable (http://www.reactable.com/), but on a horizontal smartBoard.
-We spent a few months on this and end up with a prototype. We did not implemented all of the functionalities of the reactable project 
+We spent a few months on this and we ended up with a prototype. We did not implemented all the functionalities of the reactable project 
 but at least the basic ones.
 
 Functionnalities
@@ -15,7 +15,7 @@ Functionnalities
 
 * _Placing reactable objects on the canvas_
 
-    From a list menu, you can smoothly drag the reactable         objects on the canvas. 
+    From a list menu, you can drag the reactable objects on the canvas. 
 The objects on the canvas are connecting with others according to their distance.
 
 * _Oscillator implementation_
